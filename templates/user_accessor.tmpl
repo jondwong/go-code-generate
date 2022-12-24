@@ -8,15 +8,15 @@ import (
     "time"
 )
 
-type userAccessor struct {
-    db *gorm.db
+type UserAccessor struct {
+    db *gorm.DB
 }
 
-type userAccessorOption func(*userAccessor)
+type UserAccessorOption func(*UserAccessor)
 
-func NewUserAccessor(opts ...userAccessorOption) *userAccessor {
-    accessor := &userAccessor{
-        db: NewDBConnection(),
+func NewUserAccessor(opts ...UserAccessorOption) *UserAccessor {
+    accessor := &UserAccessor{
+        db: NewDbConnection(),
     }
 
     for _, opt := range opts {
@@ -26,30 +26,30 @@ func NewUserAccessor(opts ...userAccessorOption) *userAccessor {
     return accessor
 }
 
-func WithDb(db *gorm.DB) func(*userAccessor) {
-    return func(accessor *userAccessor) {
+func WithDb(db *gorm.DB) func(*UserAccessor) {
+    return func(accessor *UserAccessor) {
         accessor.db = db
     }
 }
 
-func (a *userAccessor) GetById(id string) (domain.User, error) {
+func (a *UserAccessor) GetById(id string) (domain.User, error) {
     var user domain.User
     if result := a.db.First(&user, "id", id); result.Error != nil {
         return domain.User{}, result.Error
     }
-    return userModel, nil
+    return user, nil
 }
 
-func (a *userAccessor) GetByEmail(email string) (domain.User, error) {
+func (a *UserAccessor) GetByEmail(email string) (domain.User, error) {
     var user domain.User
     if result := a.db.Where("email = ?", email).First(&user); result.Error != nil {
         return domain.User{}, result.Error
     }
 
-    return userModel, nil
+    return user, nil
 }
 
-func (a *userAccessor) GetAll() ([]domain.User, error) {
+func (a *UserAccessor) GetAll() ([]domain.User, error) {
     var users []domain.User
     if result := a.db.Find(&users); result.Error != nil {
         return []domain.User{}, result.Error
@@ -58,12 +58,12 @@ func (a *userAccessor) GetAll() ([]domain.User, error) {
     return users, nil
 }
 
-func (a *userAccessor) Create(id string, email string, password string) (domain.User, error) {
+func (a *UserAccessor) Create(email string, password string) (domain.User, error) {
     id := uuid.New().String()
-    now := time.Now()
+
     hashedPassword, err := hashPassword(password)
     if err != nil {
-        return core.User{}, err
+        return domain.User{}, err
     }
 
     model := domain.User{
@@ -79,10 +79,10 @@ func (a *userAccessor) Create(id string, email string, password string) (domain.
     return model, nil
 }
 
-func (a *userAccessor) Authenticate(email string, password string) (domain.User, error) {
+func (a *UserAccessor) Authenticate(email string, password string) (domain.User, error) {
     u, err := a.GetByEmail(email)
     if err != nil {
-        return core.User{}, errors.Wrap(err, "Failed to authenticate user. Error on retrieving user with email %s", email)
+        return domain.User{}, errors.Wrap(err, "Failed to authenticate user. Error on retrieving user with email %s", email)
     }
 
     err = comparePassword(u.HashedPassword, password)

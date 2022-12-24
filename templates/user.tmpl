@@ -1,16 +1,19 @@
 package {{.DomainPkgName}}
 
+import "time"
+
 type User struct {
     Id              string  `json:"id" gorm:"primaryKey"`
     Email           string  `json:"email"`
     HashedPassword  string  `json:"hashedPassword"`
+    CreatedAt       time.Time `json:"createdAt`
 }
 
 type UserAccessor interface {
     GetById(id string) (User, error)
     GetByEmail(email string) (User, error)
     GetAll() ([]User, error)
-    Create(id string, email string, password string) (User, error)
+    Create(email string, password string) (User, error)
 }
 
 type UserAuthenticator interface {
